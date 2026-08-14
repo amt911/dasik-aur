@@ -1,0 +1,26 @@
+pkgbase = dasik
+	pkgdesc = Declarative Arch Linux installer: describe the target system in one JSON file and converge to it
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/amt911/dasik
+	arch = any
+	license = MIT
+	makedepends = git
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-wheel
+	makedepends = python-setuptools
+	depends = python
+	depends = python-pydantic
+	depends = python-colorama
+	optdepends = arch-install-scripts: pacstrap/arch-chroot/genfstab — required to install onto a target
+	optdepends = gptfdisk: sgdisk — required for disk partitioning
+	optdepends = dosfstools: mkfs.fat for the ESP
+	optdepends = e2fsprogs: mkfs.ext4
+	optdepends = btrfs-progs: btrfs subvolume layouts
+	optdepends = cryptsetup: LUKS encryption and pendrive unlock
+	optdepends = sudo: builds packages from the AUR / a Git PKGBUILD as an unprivileged user
+	source = dasik::git+https://github.com/amt911/dasik.git#tag=0.1.0
+	sha256sums = SKIP
+
+pkgname = dasik
