@@ -89,7 +89,7 @@ sudo dasik sync  ~/config/thinkpad.json      # sync already defaults to /
 Your configs live in a private repository (`amt911/dasik-personal-config`);
 nothing about them belongs here. A layout that works:
 
-```
+```text
 dasik-personal-config/
 ├── thinkpad.json          # one file per machine
 ├── desktop.json
@@ -180,6 +180,16 @@ dasik builds it **inside the target**, from its PKGBUILD repo, pinned:
 ```
 
 So the ISO needs nothing from config-saver. Only the archive does.
+
+Since **config-saver 3.3.0** there is no fallback: the examples the package
+ships live in `/usr/share/config-saver/configs` and are never active, so a
+machine where `configs` above is empty runs a timer that exits 6 ("No
+configurations found") instead of quietly archiving somebody else's examples.
+`dasik plan` warns about exactly that combination. The two active levels are
+`/etc/config-saver/configs` (dasik writes it from the block above) and
+`~/.config/config-saver/configs.d` (the user's own, merged over it) — and since
+the second one lives inside `$HOME`, it travels inside the archive and comes
+back with it.
 
 ### Moving the archive: age + a release asset
 
