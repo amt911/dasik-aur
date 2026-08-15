@@ -71,7 +71,12 @@ install_from_release() {
     [ -n "$pkgver" ] && [ -n "$pkgrel" ] || return 1
     url="https://github.com/$PKG_REPO/releases/latest/download/dasik-$pkgver-$pkgrel-any.pkg.tar.zst"
     echo "  $url"
-    pacman -U --noconfirm "$url"
+    # --overwrite '*': an ISO months older than the repos hits file conflicts
+    # the moment dependencies drag the new world in (e.g. the gcc-libs split —
+    # "libgcc: /usr/lib/libgcc_s.so.1 exists in filesystem"). The live session
+    # is disposable and this flag never touches the install target, so
+    # overwriting HERE is safe; on a current ISO it changes nothing.
+    pacman -U --noconfirm --overwrite '*' "$url"
 }
 
 install_from_source() {
@@ -81,7 +86,7 @@ install_from_source() {
     # makepkg assumes base-devel (fakeroot, debugedit, …) and the live ISO
     # does not carry it — without this the build dies with "Cannot find the
     # fakeroot binary".
-    pacman -S --noconfirm --needed base-devel
+    pacman -S --noconfirm --needed --overwrite '*' base-devel
     id builder > /dev/null 2>&1 || useradd -m builder
     echo 'builder ALL=(ALL) NOPASSWD: /usr/bin/pacman' > /etc/sudoers.d/dasik-builder
     trap 'rm -f /etc/sudoers.d/dasik-builder' RETURN
@@ -91,13 +96,16 @@ install_from_source() {
     git clone --depth 1 "https://github.com/$PKG_REPO.git" "$build_dir"
     chown -R builder:builder "$build_dir"
     ( cd "$build_dir" && sudo -u builder makepkg --syncdeps --noconfirm )
-    pacman -U --noconfirm "$build_dir"/*.pkg.tar.zst
+    pacman -U --noconfirm --overwrite '*' "$build_dir"/*.pkg.tar.zst
 }
 
 if [ "$FORCE_BUILD" = "1" ]; then
     install_from_source
 elif ! install_from_release; then
-    warn "no published package found — building from source instead"
+    # The reason is above this line (curl or pacman said it). The classic one
+    # is an ISO much older than the repos; a current ISO avoids every variant
+    # of that problem.
+    warn "release install failed (reason above) — building from source instead"
     install_from_source
 fi
 
