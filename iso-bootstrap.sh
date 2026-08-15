@@ -71,12 +71,16 @@ install_from_release() {
     [ -n "$pkgver" ] && [ -n "$pkgrel" ] || return 1
     url="https://github.com/$PKG_REPO/releases/latest/download/dasik-$pkgver-$pkgrel-any.pkg.tar.zst"
     echo "  $url"
+    # Download first, install the LOCAL file. `pacman -U <url>` is different:
+    # archiso sets RemoteFileSigLevel = Required, so a remote -U demands a .sig
+    # next to the asset — 404, abort. A local file falls under
+    # LocalFileSigLevel (Optional) and installs cleanly.
+    local pkg=/tmp/dasik-release.pkg.tar.zst
+    curl -fL -o "$pkg" "$url" || return 1
     # --overwrite '*': an ISO months older than the repos hits file conflicts
-    # the moment dependencies drag the new world in (e.g. the gcc-libs split —
-    # "libgcc: /usr/lib/libgcc_s.so.1 exists in filesystem"). The live session
-    # is disposable and this flag never touches the install target, so
-    # overwriting HERE is safe; on a current ISO it changes nothing.
-    pacman -U --noconfirm --overwrite '*' "$url"
+    # the moment dependencies drag the new world in (e.g. the gcc-libs split).
+    # The live session is disposable and this never touches the install target.
+    pacman -U --noconfirm --overwrite '*' "$pkg"
 }
 
 install_from_source() {

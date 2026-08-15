@@ -62,8 +62,15 @@ mount -o remount,size=75% /run/archiso/cowspace
 
 ```sh
 pacman -Sy
-pacman -U https://github.com/amt911/dasik-aur/releases/latest/download/dasik-<version>-1-any.pkg.tar.zst
+curl -fL -o /tmp/dasik.pkg.tar.zst \
+  "https://github.com/amt911/dasik-aur/releases/latest/download/dasik-<version>-1-any.pkg.tar.zst"
+pacman -U --overwrite '*' /tmp/dasik.pkg.tar.zst
 ```
+
+Download first, then install the local file: the live ISO sets
+`RemoteFileSigLevel = Required`, so `pacman -U <url>` demands a `.sig` the
+release does not carry and aborts on the 404. A local file falls under
+`LocalFileSigLevel` (Optional).
 
 ## Install on an existing Arch system
 
