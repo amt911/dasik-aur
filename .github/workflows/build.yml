@@ -56,6 +56,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # The build chowned the workspace to `builder` (makepkg refuses root),
+          # and `gh release create` shells out to git as root — which refuses a
+          # repository owned by somebody else ("detected dubious ownership") and
+          # takes the whole publish down with it.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           gh release create "$GITHUB_REF_NAME" ./*.pkg.tar.zst \
             --title "$GITHUB_REF_NAME" \
             --generate-notes
