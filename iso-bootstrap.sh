@@ -60,13 +60,16 @@ pacman -S --noconfirm --needed git github-cli age
 
 install_from_release() {
     say "Fetching the latest dasik package from $PKG_REPO"
-    # No jq on a live ISO. The asset URL is the only .pkg.tar.zst link in the
-    # release JSON, so grep is enough and needs no authentication for a public
-    # repo.
-    local url
-    url=$(curl -fsSL "https://api.github.com/repos/$PKG_REPO/releases/latest" \
-          | grep -o 'https://[^"]*\.pkg\.tar\.zst' | head -n1) || true
-    [ -n "$url" ] || return 1
+    # NOT the GitHub API: it rate-limits anonymous IPs, and a live ISO is
+    # exactly the anonymous IP that has spent its quota. The PKGBUILD on main
+    # names the version, raw.githubusercontent.com is not the API, and
+    # /releases/latest/download/ is a stable redirect — no JSON anywhere.
+    local pkgbuild pkgver pkgrel url
+    pkgbuild=$(curl -fsSL "https://raw.githubusercontent.com/$PKG_REPO/main/PKGBUILD") || return 1
+    pkgver=$(printf '%s\n' "$pkgbuild" | sed -n 's/^pkgver=//p' | head -n1)
+    pkgrel=$(printf '%s\n' "$pkgbuild" | sed -n 's/^pkgrel=//p' | head -n1)
+    [ -n "$pkgver" ] && [ -n "$pkgrel" ] || return 1
+    url="https://github.com/$PKG_REPO/releases/latest/download/dasik-$pkgver-$pkgrel-any.pkg.tar.zst"
     echo "  $url"
     pacman -U --noconfirm "$url"
 }
@@ -75,6 +78,10 @@ install_from_source() {
     say "Building the PKGBUILD"
     # makepkg refuses to run as root; the ISO is root. A throwaway user with
     # pacman rights is the standard way out, and both go away with the ISO.
+    # makepkg assumes base-devel (fakeroot, debugedit, …) and the live ISO
+    # does not carry it — without this the build dies with "Cannot find the
+    # fakeroot binary".
+    pacman -S --noconfirm --needed base-devel
     id builder > /dev/null 2>&1 || useradd -m builder
     echo 'builder ALL=(ALL) NOPASSWD: /usr/bin/pacman' > /etc/sudoers.d/dasik-builder
     trap 'rm -f /etc/sudoers.d/dasik-builder' RETURN
