@@ -86,6 +86,12 @@ sudo dasik sync  ~/config/thinkpad.json      # sync already defaults to /
 
 ## The private config repo
 
+> **Coming from a machine you built by hand, with neither tool installed?**
+> [Adopt an existing machine](https://github.com/amt911/dasik/wiki/Adopt-an-existing-machine)
+> is the guide for that: install both, capture the system into a config from
+> `{}`, create the two private repositories, arm the capture for a reinstall,
+> and reinstall from it.
+
 Your configs live in a private repository (`amt911/dasik-personal-config`);
 nothing about them belongs here. A layout that works:
 
@@ -186,10 +192,26 @@ So the ISO needs nothing from config-saver. Only the archive does.
 On the **old machine**, capture and encrypt:
 
 ```sh
-config-saver --compress                                  # writes an archive per configuration
-config-saver --export-config home --output ~/home.tar.gz # pick the latest one out
-age -p -o ~/home.tar.gz.age ~/home.tar.gz                # passphrase, prompted twice
+config-saver --compress                                      # runs every configuration
+config-saver --export-config home --output ~/home.tar.gz.age # pick the latest one out
 ```
+
+config-saver **encrypts natively**, which is what you want for something a timer
+produces while you are asleep — declare it once in the configuration and every
+archive comes out encrypted:
+
+```yaml
+encrypt:
+  method: age
+  recipients:
+    - age1qz…        # from `age-keygen -o ~/.config/age/key.txt`
+```
+
+Keep that private key somewhere the archive is **not** — it cannot live only
+inside what it decrypts. `age -p ~/home.tar.gz` (a passphrase) is the manual
+alternative when you would rather have nothing to custody; the cost is that an
+unattended timer cannot type it, so a plaintext archive waits on disk until you
+do.
 
 Upload it to the **private** config repo as a release asset — not as a commit.
 Git is bad at 2 GB of browser profile; release assets are exactly this:
@@ -199,9 +221,14 @@ gh release create home-2026-08 ~/home.tar.gz.age \
   -R amt911/dasik-personal-config -n "\$HOME capture"
 ```
 
-`age -p` is a passphrase, not a key file — nothing to lose on a pendrive, and
-one thing to remember. config-saver says it itself: **a plain `.tar.gz` is
-compressed, not encrypted**, and this one holds your browser profiles.
+config-saver says it itself: **a plain `.tar.gz` is compressed, not
+encrypted**, and this one holds your browser profiles.
+
+> **An encrypted archive must be decrypted before dasik's restore.** dasik runs
+> `config-saver --decompress --input <path>` with no `--identity`, which age
+> requires. Decrypt it yourself (`age -d -i ~/.config/age/key.txt -o
+> /root/home.tar.gz home.tar.gz.age`) and point `restore.archive` at the plain
+> file — or restore by hand with `config-saver --decompress -i … --identity …`.
 
 ### Restoring `$HOME`
 
