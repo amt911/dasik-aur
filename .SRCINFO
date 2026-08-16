@@ -1,6 +1,6 @@
 pkgbase = dasik
 	pkgdesc = Declarative Arch Linux installer: describe the target system in one JSON file and converge to it
-	pkgver = 0.5.0
+	pkgver = 0.6.0
 	pkgrel = 1
 	url = https://github.com/amt911/dasik
 	arch = any
@@ -20,7 +20,7 @@ pkgbase = dasik
 	optdepends = btrfs-progs: btrfs subvolume layouts
 	optdepends = cryptsetup: LUKS encryption and pendrive unlock
 	optdepends = sudo: builds packages from the AUR / a Git PKGBUILD as an unprivileged user
-	source = dasik::git+https://github.com/amt911/dasik.git#tag=0.5.0
+	source = dasik::git+https://github.com/amt911/dasik.git#tag=0.6.0
 	sha256sums = SKIP
 
 pkgname = dasik
