@@ -1,6 +1,6 @@
 # Maintainer: Andrés Merlo Trujillo <a.merlo.truji10@gmail.com>
 pkgname=dasik
-pkgver=0.13.1
+pkgver=0.13.2
 pkgrel=1
 pkgdesc="Declarative Arch Linux installer: describe the target system in one JSON file and converge to it"
 arch=('any')
